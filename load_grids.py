@@ -44,23 +44,6 @@ def create_grids_for_interpolation_on_Mazevet_data():
             U_forRBS_Tp[i,j]  = U_forRBS_Tp[i, j] * cst.k * 3. * cst.N_A * T_meshgrid[i,j]
             RHO_forRBS_Tp[i,j]= RHO_forRBS_Tp[i,j] * 1000. / M_h2o
 
-
-    ######################### INSERT THOSE FUNCTIONS IN A FUTURE RELEVANT SPOT
-    # RBS require 2 1D vectors for x and y, and a "meshgridded" 2D vector for Z
-    s_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid * 1e9,
-                                                   T_interpol_grid,
-                                                   S_forRBS_Tp)
-
-    # T in K, p in Pa, gives U in J.mol-1
-    u_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid * 1e9,
-                                                   T_interpol_grid,
-                                                   U_forRBS_Tp )
-
-    # T in K, p in Pa, gives RHO in mol.m-3
-    rho_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid * 1e9,
-                                                     T_interpol_grid,
-                                                     RHO_forRBS_Tp)
-
     return p_interpol_grid * 1e9, T_interpol_grid, S_forRBS_Tp, U_forRBS_Tp, RHO_forRBS_Tp
 
 
@@ -100,18 +83,6 @@ def create_grids_for_interpolation_on_HpLT_grid():
 
             cpt += 1
 
-    ################ INSERT IN AN APPROPRIATE PLACE LATER
-    s_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
-                                               T_interpol_grid,
-                                               s_interpol_grid)
-    alpha_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
-                                                   T_interpol_grid,
-                                                   alpha_interpol_grid)
-    rho_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
-                                                 T_interpol_grid,
-                                                 rho_interpol_grid)
-    Cp_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
-                                                T_interpol_grid,
-                                                Cp_interpol_grid)
+
 
     return p_interpol_grid,T_interpol_grid,rho_interpol_grid,s_interpol_grid,Cp_interpol_grid

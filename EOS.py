@@ -1,7 +1,5 @@
 from parameters import *
-import math as m
-from scipy.optimize import *
-from scipy import constants
+import IAPWS95
 import phase_limits
 
 class DataPoint:
@@ -9,22 +7,16 @@ class DataPoint:
         self.T = temperature
         self.p = pressure
 
-        self.rho = self.get_density()
+        self.grid = self.chose_the_right_grid()
 
-        self.grid="None"
+        self.rho=self.get_rho()
+        self.s=self.get_s()
+        self.u = self.get_u()
+        self.Cp = self.get_Cp()
+
         self.phase = "vapor"  # for now
 
 
-    def get_density(self):
-
-    return 1
-
-
-
-
-    def search_rho_for_given_p(self, rho_search):
-
-    return 1
 
     def chose_the_right_grid(self):
 
@@ -40,14 +32,35 @@ class DataPoint:
 
 
 
-        if (self.T < 500. and self.T > 190. and self.p < pVIVIIL):
+        if (500. > self.T > 190. and self.p < pVIVIIL):
             self.grid="seafreeze"
-        elif ( self.T>=500 and self.T<= T_IAPWS_to_Mazevet-domega and not datapoint_in_ice_VII ):
+        elif (500 <= self.T <= T_IAPWS_to_Mazevet - domega and not datapoint_in_ice_VII):
             self.grid="IAPWS95"
-        elif ( self.T>=500 and self.T<= T_IAPWS_to_Mazevet-domega and datapoint_in_ice_VII ):
+        elif (500 <= self.T <= T_IAPWS_to_Mazevet - domega and datapoint_in_ice_VII):
             self.grid="HPLT"
-        elif ( self.T > T_IAPWS_to_Mazevet-domega and self.T< T_IAPWS_to_Mazevet+domega ) :
-            self.grid="transition_btw_IAPWS_and_Mazevet"
-        elif self.T<= T_IAPWS_to_Mazevet+domega :
-            self.grid="check_rho_first"
 
+        elif T_IAPWS_to_Mazevet - domega < self.T :
+            Point_from_IAPWS=IAPWS95.DataPoint_IAPWS95(self.T, self.p)
+
+            if Point_from_IAPWS.rho/M_h2o < 1000.:
+                self.grid="IAPWS95"
+            else:
+
+                if T_IAPWS_to_Mazevet - domega < self.T < T_IAPWS_to_Mazevet + domega and not datapoint_in_ice_VII:
+                    self.grid = "transition_btw_IAPWS_and_Mazevet"
+                elif T_IAPWS_to_Mazevet - domega < self.T < T_IAPWS_to_Mazevet + domega and datapoint_in_ice_VII:
+                    self.grid = "transition_btw_HPLT_and_Mazevet"
+                elif self.T <= T_IAPWS_to_Mazevet+domega:
+                    self.grid = "Mazevet"
+
+    def get_rho(self):
+        return 1
+
+    def get_s(self):
+        return 1
+
+    def get_u(self):
+        return 1
+
+    def get_Cp(self):
+        return 1

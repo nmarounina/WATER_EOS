@@ -1,4 +1,5 @@
-
+import load_grids
+from scipy import interpolate
 import numpy as np
 
 # Reference paper :
@@ -11,9 +12,14 @@ Tc = 647.096 #K, temperature
 pc = 22.064e6 #Pa, pressure
 rhoc = 322./18.015268e-3 #mol.m-3
 
-# TRIPLE POINT
+# TRIPLE POINT LIQUID VAPOR ICE 1h
 Tt = 273.16 #K, temperature
 pt = 611.655 #Pa, pressure
+
+#triple point ice VI, VII, Liquid
+pVIVIIL=2.2e9 #pa
+TVIVIIL=353.5 #K
+
 
 # GENERAL PARAMETERS OF WATER
 Rig = 8.3143714 # ideal gas constant
@@ -24,6 +30,7 @@ M_h2o = 18.015268e-3 #kg.mol-1, molar mass
 # PARAMETERS OF THE EQUATION OF STATE :
 #parameter that allows a smooth transition between the IAPWS EOS and ... EOS
 domega=50.
+T_IAPWS_to_Mazevet=1273. #K
 
 
 
@@ -368,3 +375,36 @@ C[55] = 32.
 D[55] = 800
 A[55] = 0.32
 bet[55] = 0.3
+
+
+############################################# CREATING FUNCTIONS FOR MAZEVET EOS:
+p_interpol_grid, T_interpol_grid, S_forRBS_Tp, U_forRBS_Tp, RHO_forRBS_Tp = load_grids.create_grids_for_interpolation_on_Mazevet_data()
+# RBS require 2 1D vectors for x and y, and a "meshgridded" 2D vector for Z
+s_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                               T_interpol_grid,
+                                               S_forRBS_Tp)
+
+# T in K, p in Pa, gives U in J.mol-1
+u_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                               T_interpol_grid,
+                                               U_forRBS_Tp)
+
+# T in K, p in Pa, gives RHO in mol.m-3
+rho_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                                 T_interpol_grid,
+                                                 RHO_forRBS_Tp)
+
+############################################# CREATING FUNCTIONS FOR HPLT EOS:
+p_interpol_grid, T_interpol_grid, rho_interpol_grid, s_interpol_grid, Cp_interpol_grid = load_grids.create_grids_for_interpolation_on_HpLT_grid()
+s_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                           T_interpol_grid,
+                                           s_interpol_grid)
+# alpha_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+#                                                    T_interpol_grid,
+#                                                    alpha_interpol_grid)
+rho_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                             T_interpol_grid,
+                                             rho_interpol_grid)
+Cp_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+                                            T_interpol_grid,
+                                            Cp_interpol_grid)
