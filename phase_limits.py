@@ -1,4 +1,4 @@
-from parameters import Tc, pc, Tt, domega
+from parameters import Tc, pc, Tt, domega, T_IAPWS_to_Mazevet
 import math as m
 
 def get_SVP_vap_liq(T):  #  in K
@@ -24,7 +24,7 @@ def get_SVP_vap_liq(T):  #  in K
 def get_SVP_vap_ice(T):
     # SVP=saturation vapor pressure
     # between the vapor and ice phase
-    # valid from 273.16K to 190K, 2.21 in Wagner and Pruss 2002
+    # valid from 273.16K to 190K, eq.2.21 in Wagner and Pruss 2002
 
     if (T > Tt):
         raise "Outside of the valid temperature range for this saturation vapor pressure"
@@ -60,7 +60,7 @@ def get_liq_to_iceVII_phase_line_upto_800K(T):
 
 def  get_liq_to_iceVII_phase_line_upto_1237K(T):
 
-    if not(T >= 800 and T <= 1273. + domega):
+    if not(T >= 800 and T <= T_IAPWS_to_Mazevet  + domega):
         raise "Outside of the valid temperature range for this melting line (ice VII, 800K-1273K)"
     else:
         pmelt = 3.3488 + 1.8696e-5 * T ** 2  # GPa, fitted from Hernandez+ 2018

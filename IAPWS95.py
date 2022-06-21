@@ -4,7 +4,7 @@ from scipy.optimize import *
 from scipy import constants
 import phase_limits
 
-class DataPoint:
+class DataPoint_IAPWS95:
     def __init__(self, temperature, pressure):
         self.T = temperature
         self.p = pressure

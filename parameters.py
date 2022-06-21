@@ -3,36 +3,33 @@ from scipy import interpolate
 import numpy as np
 
 # Reference paper :
-#Wagner, W. & Pruß, A.
+# Wagner, W. & Pruß, A.
 # The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use.
 # J. Phys. Chem. Ref. Data 31, 387–535 (2002).
 
 # CRITICAL POINT
-Tc = 647.096 #K, temperature
-pc = 22.064e6 #Pa, pressure
-rhoc = 322./18.015268e-3 #mol.m-3
+import phase_limits
+
+Tc = 647.096  # K, temperature
+pc = 22.064e6  # Pa, pressure
+rhoc = 322. / 18.015268e-3  # mol.m-3
 
 # TRIPLE POINT LIQUID VAPOR ICE 1h
-Tt = 273.16 #K, temperature
-pt = 611.655 #Pa, pressure
+Tt = 273.16  # K, temperature
+pt = 611.655  # Pa, pressure
 
-#triple point ice VI, VII, Liquid
-pVIVIIL=2.2e9 #pa
-TVIVIIL=353.5 #K
-
+# triple point ice VI, VII, Liquid
+pVIVIIL = 2.2e9  # pa
+TVIVIIL = 353.5  # K
 
 # GENERAL PARAMETERS OF WATER
-Rig = 8.3143714 # ideal gas constant
-M_h2o = 18.015268e-3 #kg.mol-1, molar mass
-
-
+Rig = 8.3143714  # ideal gas constant
+M_h2o = 18.015268e-3  # kg.mol-1, molar mass of pure water molecule
 
 # PARAMETERS OF THE EQUATION OF STATE :
-#parameter that allows a smooth transition between the IAPWS EOS and ... EOS
-domega=50.
-T_IAPWS_to_Mazevet=1273. #K
-
-
+# parameter that allows a smooth transition between the IAPWS EOS and ... EOS
+transition_width = 50.
+T_IAPWS_to_Mazevet = 1273.  # K
 
 # PHI0 -- residual part of IAPWS95, Equation 6.6
 # Coefficients listed in Table 6.2
@@ -57,7 +54,6 @@ gam0[6] = 9.24437796
 n0[7] = 0.24873
 gam0[7] = 27.5075105
 
-
 # PHIR -- ideal-gas part of IAPWS95, Equation 6.5
 # Coefficients listed in Table 6.1
 c = np.zeros(56)
@@ -75,7 +71,6 @@ C = np.zeros(56)
 D = np.zeros(56)
 A = np.zeros(56)
 bet = np.zeros(56)
-
 
 c[0] = 0.
 d[0] = 1.
@@ -376,35 +371,60 @@ D[55] = 800
 A[55] = 0.32
 bet[55] = 0.3
 
-
 ############################################# CREATING FUNCTIONS FOR MAZEVET EOS:
 p_interpol_grid, T_interpol_grid, S_forRBS_Tp, U_forRBS_Tp, RHO_forRBS_Tp = load_grids.create_grids_for_interpolation_on_Mazevet_data()
 # RBS require 2 1D vectors for x and y, and a "meshgridded" 2D vector for Z
-s_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+s_mazevet_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                                T_interpol_grid,
                                                S_forRBS_Tp)
 
 # T in K, p in Pa, gives U in J.mol-1
-u_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+u_mazevet_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                                T_interpol_grid,
                                                U_forRBS_Tp)
 
 # T in K, p in Pa, gives RHO in mol.m-3
-rho_mazevet_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+rho_mazevet_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                                  T_interpol_grid,
                                                  RHO_forRBS_Tp)
 
+
 ############################################# CREATING FUNCTIONS FOR HPLT EOS:
+
 p_interpol_grid, T_interpol_grid, rho_interpol_grid, s_interpol_grid, Cp_interpol_grid = load_grids.create_grids_for_interpolation_on_HpLT_grid()
-s_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+s_HPI_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                            T_interpol_grid,
                                            s_interpol_grid)
 # alpha_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
 #                                                    T_interpol_grid,
 #                                                    alpha_interpol_grid)
-rho_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+rho_HPI_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                              T_interpol_grid,
                                              rho_interpol_grid)
-Cp_HPI_Tp = interpolate.RectBivariateSpline(p_interpol_grid,
+
+Cp_HPI_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                             T_interpol_grid,
                                             Cp_interpol_grid)
+
+
+def w(T, rho, p):  # transition function from Mazevet to IAPWS in the fluid phase
+
+    T0 = 1273.
+    omega = 1.
+
+    if T <= T0 - transition_width and rho > 1000. / M_h2o:
+        omega = 1.
+    elif T > T0 - transition_width and T <= T0 + transition_width and rho > 1000. / M_h2o:
+        a = -1. / (2. * transition_width)
+        b = 0.5 + T0 / (2. * transition_width)
+        omega = a * T + b
+    elif T > T0 + transition_width:
+        omega = 0.
+
+    if (rho * M_h2o / 1000. <= 1.):
+        omega = 1.
+
+    if p > phase_limits.get_liq_to_iceVII_phase_line_upto_1237K(T) :
+        omega = 0.
+
+    return omega
