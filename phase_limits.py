@@ -1,4 +1,4 @@
-from parameters import Tc, pc, Tt, domega, T_IAPWS_to_Mazevet
+from parameters import Tc, pc, Tt, transition_width, T_IAPWS_to_Mazevet
 import math as m
 
 def get_SVP_vap_liq(T):  #  in K
@@ -60,9 +60,29 @@ def get_liq_to_iceVII_phase_line_upto_800K(T):
 
 def  get_liq_to_iceVII_phase_line_upto_1237K(T):
 
-    if not(T >= 800 and T <= T_IAPWS_to_Mazevet  + domega):
+    if not(T >= 800 and T <= T_IAPWS_to_Mazevet  + transition_width):
         raise "Outside of the valid temperature range for this melting line (ice VII, 800K-1273K)"
     else:
         pmelt = 3.3488 + 1.8696e-5 * T ** 2  # GPa, fitted from Hernandez+ 2018
 
     return pmelt*1e9 #Pa
+
+def w(T, p):  # transition function from  IAPWS to Mazevet in the fluid phase
+
+    T0 = 1273.
+    contribution_of_IAPWS = 1.
+    #on the scale of 0 to 1, 1-contribution_of_IAPWS = contribution of Mazevet to the density values
+
+    if T <= T0 - transition_width:
+        contribution_of_IAPWS = 1.
+    elif T0 - transition_width < T <= T0 + transition_width:
+        a = -1. / (2. * transition_width)
+        b = 0.5 + T0 / (2. * transition_width)
+        contribution_of_IAPWS = a * T + b
+    elif T > T0 + transition_width:
+        contribution_of_IAPWS = 0.
+
+    if p > get_liq_to_iceVII_phase_line_upto_1237K(T) :
+        contribution_of_IAPWS = 0.
+
+    return contribution_of_IAPWS

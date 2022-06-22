@@ -8,7 +8,6 @@ import numpy as np
 # J. Phys. Chem. Ref. Data 31, 387–535 (2002).
 
 # CRITICAL POINT
-import phase_limits
 
 Tc = 647.096  # K, temperature
 pc = 22.064e6  # Pa, pressure
@@ -406,23 +405,3 @@ Cp_HPI_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                             T_interpol_grid,
                                             Cp_interpol_grid)
 
-
-def w(T, p):  # transition function from Mazevet to IAPWS in the fluid phase
-
-    T0 = 1273.
-    contribution_of_IAPWS = 1.
-    #on the scale of 0 to 1, 1-contribution_of_IAPWS = contribution of Mazevet to the density values
-
-    if T <= T0 - transition_width:
-        contribution_of_IAPWS = 1.
-    elif T0 - transition_width < T <= T0 + transition_width:
-        a = -1. / (2. * transition_width)
-        b = 0.5 + T0 / (2. * transition_width)
-        contribution_of_IAPWS = a * T + b
-    elif T > T0 + transition_width:
-        contribution_of_IAPWS = 0.
-
-    if p > phase_limits.get_liq_to_iceVII_phase_line_upto_1237K(T) :
-        contribution_of_IAPWS = 0.
-
-    return contribution_of_IAPWS
