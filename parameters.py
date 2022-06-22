@@ -407,24 +407,22 @@ Cp_HPI_pT = interpolate.RectBivariateSpline(p_interpol_grid,
                                             Cp_interpol_grid)
 
 
-def w(T, rho, p):  # transition function from Mazevet to IAPWS in the fluid phase
+def w(T, p):  # transition function from Mazevet to IAPWS in the fluid phase
 
     T0 = 1273.
-    omega = 1.
+    contribution_of_IAPWS = 1.
+    #on the scale of 0 to 1, 1-contribution_of_IAPWS = contribution of Mazevet to the density values
 
-    if T <= T0 - transition_width and rho > 1000. / M_h2o:
-        omega = 1.
-    elif T > T0 - transition_width and T <= T0 + transition_width and rho > 1000. / M_h2o:
+    if T <= T0 - transition_width:
+        contribution_of_IAPWS = 1.
+    elif T0 - transition_width < T <= T0 + transition_width:
         a = -1. / (2. * transition_width)
         b = 0.5 + T0 / (2. * transition_width)
-        omega = a * T + b
+        contribution_of_IAPWS = a * T + b
     elif T > T0 + transition_width:
-        omega = 0.
-
-    if (rho * M_h2o / 1000. <= 1.):
-        omega = 1.
+        contribution_of_IAPWS = 0.
 
     if p > phase_limits.get_liq_to_iceVII_phase_line_upto_1237K(T) :
-        omega = 0.
+        contribution_of_IAPWS = 0.
 
-    return omega
+    return contribution_of_IAPWS
