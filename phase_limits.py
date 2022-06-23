@@ -8,7 +8,7 @@ def get_SVP_vap_liq(T):  #  in K
     # Eq. 2.5
     th = 1. - T / Tc
     if not (T >= Tt and T <= Tc):
-        raise "Outside of the valid temperature range for this saturation vapor pressure"
+        raise "Outside of the valid temperature range for the saturation vapor pressure (liq/vap)"
     else:
         Psat = Tc / T * (
                     -7.85951783 * th +
@@ -27,11 +27,11 @@ def get_SVP_vap_ice(T):
     # valid from 273.16K to 190K, eq.2.21 in Wagner and Pruss 2002
 
     if (T > Tt):
-        raise "Outside of the valid temperature range for this saturation vapor pressure"
+        raise "Outside of the valid temperature range for the saturation vapor pressure (ice/vap)"
     else:
         th = T / Tt
         Psat = (-13.928169 * (1. - th ** (-1.5)) +
-                34.7078238 * (1. - th ** (-1.25)) )
+                34.7078238 * (1. - th ** (-1.25)))
 
 
     return m.exp(Psat) * 611.657 # Pascals, the pressure multiplying the exp(Psat) is knowingly different from Pt

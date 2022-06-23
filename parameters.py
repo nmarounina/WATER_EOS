@@ -20,6 +20,7 @@ pt = 611.655  # Pa, pressure
 # triple point ice VI, VII, Liquid
 pVIVIIL = 2.2e9  # pa
 TVIVIIL = 353.5  # K
+u_VIVIIL = -1027.45143885 #internal energy value at the triple point
 
 # GENERAL PARAMETERS OF WATER
 Rig = 8.3143714  # ideal gas constant

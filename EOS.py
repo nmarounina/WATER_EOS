@@ -17,6 +17,8 @@ class DataPoint:
         self.IAPWS95_object = None
         self.seafreeze_object = None
         self.grid = None
+        self.phase = None
+
         self.choose_the_right_grid()
 
         self.rho = 0
@@ -25,12 +27,11 @@ class DataPoint:
         self.Cp = 0
 
         self.get_rho()
+        self.get_s()
+        self.get_u()
+        self.get_Cp()
 
-        # self.get_s()
-        # self.get_u()
-        # self.get_Cp()
 
-        self.phase = "vapor"  # for now
 
     def choose_the_right_grid(self):
 
@@ -77,6 +78,7 @@ class DataPoint:
                 exit()
 
             self.seafreeze_object = sf.seafreeze(PT, material)
+            self.phase = material
 
         elif 500. > self.T > 190. and self.p < pVIVIIL and datapoint_in_vapor:
             self.grid = "IAPWS95"
@@ -109,7 +111,7 @@ class DataPoint:
     def get_rho(self):
 
         if self.grid == "seafreeze":
-            self.rho = self.seafreeze_object.rho / M_h2o  # mol.m-3
+            self.rho = self.seafreeze_object.rho[0] / M_h2o  # mol.m-3
 
         elif self.grid == "IAPWS95":
             self.rho = self.IAPWS95_object.rho
@@ -120,16 +122,58 @@ class DataPoint:
         elif self.grid == "transition_btw_IAPWS_and_Mazevet":
             self.rho = phase_limits.w(self.T, self.p) * self.IAPWS95_object.rho + \
                        (1-phase_limits.w(self.T, self.p))* parameters.rho_mazevet_pT(self.p, self.T)
-
         elif self.grid == "Mazevet":
             self.rho = parameters.rho_mazevet_pT(self.p, self.T)
-        return 1
+        return 0
 
     def get_s(self):
-        return 1
+        if self.grid == "seafreeze":
+            self.s = self.seafreeze_object.S[0] * M_h2o
+
+        elif self.grid == "IAPWS95":
+            self.s = self.IAPWS95_object.s
+
+        elif self.grid == "HPLT":
+            self.s = parameters.s_HPI_pT(self.p, self.T)
+
+        elif self.grid == "transition_btw_IAPWS_and_Mazevet":
+            self.s = phase_limits.w(self.T, self.p) * self.IAPWS95_object.s + \
+                       (1-phase_limits.w(self.T, self.p))* parameters.s_mazevet_pT(self.p, self.T)
+        elif self.grid == "Mazevet":
+            self.s = parameters.s_mazevet_pT(self.p, self.T)
+
+        return 0
 
     def get_u(self):
-        return 1
+        if self.grid == "seafreeze":
+            self.u = self.seafreeze_object.U[0] * M_h2o
+
+        elif self.grid == "IAPWS95":
+            self.u = self.IAPWS95_object.u
+
+        elif self.grid == "HPLT":
+            self.u = u_VIVIIL
+
+        elif self.grid == "transition_btw_IAPWS_and_Mazevet":
+            self.u = phase_limits.w(self.T, self.p) * self.IAPWS95_object.u + \
+                       (1-phase_limits.w(self.T, self.p))* parameters.u_mazevet_pT(self.p, self.T)
+        elif self.grid == "Mazevet":
+            self.u = parameters.u_mazevet_pT(self.p, self.T)
+        return 0
 
     def get_Cp(self):
-        return 1
+        if self.grid == "seafreeze":
+            self.Cp = self.seafreeze_object.Cp[0] * M_h2o
+
+        elif self.grid == "IAPWS95":
+            self.Cp = self.IAPWS95_object.Cp
+
+        elif self.grid == "HPLT":
+            self.Cp = parameters.Cp_HPI_pT(self.p,self.T,dy=1)[0,0]
+
+        elif self.grid == "transition_btw_IAPWS_and_Mazevet":
+            self.Cp = phase_limits.w(self.T, self.p) * self.IAPWS95_object.Cp + \
+                       (1-phase_limits.w(self.T, self.p)) * self.T*parameters.s_mazevet_pT(self.p,self.T,dx=0,dy=1)[0,0]
+        elif self.grid == "Mazevet":
+            self.Cp = self.T*parameters.s_mazevet_pT(self.p, self.T, dx=0, dy=1)[0, 0]
+        return 0

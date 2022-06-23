@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 
 
 
-list_logp = np.linspace(3,10,50)
-list_T = np.linspace(200, 3000, 200)
+list_logp = np.linspace(3,10,100)
+list_T = np.linspace(200, 3000, 100)
 T_grid,logp_grid = np.meshgrid(list_T,list_logp)
 
 rho_grid=np.zeros( (len(T_grid[:,0]), len(T_grid[0,:])) )
@@ -19,7 +19,8 @@ for i in range( 0,len(list_logp) ):
 
         point=EOS.DataPoint(T_grid[i,j], 10**logp_grid[i,j])
         rho_grid[i,j]=point.rho*M_h2o
-#        print(" %f %e %f %s" %( point.T, point.p, rho_grid[i,j], point.grid ))
+
+        #print(" %f %e %f %s" %( point.T, point.p, point.rho, point.grid ))
 
 
 
